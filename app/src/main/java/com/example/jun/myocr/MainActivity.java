@@ -70,19 +70,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 打开系统相册
      */
     private Button mBtChooseFromAlbum;
+    //添加一个网络访问状态
     private ProgressDialog progressDialog;
 
-    // private AlertDialog alertDialog;
-    //  alertDialog=new AlertDialog.Builder(this)
-    //                .setTitle("title")
-//                .setMessage("message")
-//                .setPositiveButton("cancel", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                    }
-//                })
-//                .create();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtChooseFromAlbum.setOnClickListener(this);
         show_text = findViewById(R.id.show_text);
 
+        //初始化进度框
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("提示");
         progressDialog.setMessage("获取网络数据中...");
@@ -231,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 try {
+                    //参数的配置
                     Log.e("test", "2----------------------------");
                     JSONObject jsonObject1 = new JSONObject();
                     jsonObject1.put("image", encode);
@@ -242,8 +235,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.e("jsonObject1", "" + jsonObject1.toString());
                     URL url = new URL("http://dm-51.data.aliyun.com/rest/160601/ocr/ocr_idcard.json");
 
+                    //  url的填写（建议使用全局变量）
                     //这里就用第三方开源库okhttp，，httpURlConnction太磨叽了
-                    Log.e("aa", "aaaaaaaaaaaa");
+
+                    //okhttp标准使用
                     OkHttpClient client = new OkHttpClient();
                     RequestBody requestBody = FormBody.create(MediaType.parse("application/json;charset=utf-8"), jsonObject1.toString());
                     Request request = new Request.Builder()
@@ -255,16 +250,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .method("POST", requestBody)
                             .build();
                     Response response = client.newCall(request).execute();
+                    //对返回信息进行处理
                     closeDialog();
                     if (response != null) {
                         String string = response.body().string();
                         Log.e("aa", "aaaaaaaaaaaa");
                         Log.e("aa", "aaaaaaaaaaaa" + string);
                         showText(string);
-                    }else {
-
                     }
-
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -275,8 +268,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }).start();
     }
-
+//关闭对话框
     private void closeDialog() {
+
         if (progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
