@@ -3,7 +3,10 @@ package com.example.jun.myocr;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ContentUris;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -23,6 +26,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,7 +70,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 打开系统相册
      */
     private Button mBtChooseFromAlbum;
+    private ProgressDialog progressDialog;
 
+    // private AlertDialog alertDialog;
+    //  alertDialog=new AlertDialog.Builder(this)
+    //                .setTitle("title")
+//                .setMessage("message")
+//                .setPositiveButton("cancel", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                    }
+//                })
+//                .create();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +90,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+//
         initView();
+
     }
 
     private void initView() {
@@ -84,6 +103,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtChooseFromAlbum = (Button) findViewById(R.id.bt_choose_from_album);
         mBtChooseFromAlbum.setOnClickListener(this);
         show_text = findViewById(R.id.show_text);
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("提示");
+        progressDialog.setMessage("获取网络数据中...");
+        progressDialog.setCancelable(false);
     }
 
     @Override
@@ -99,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        + calendar.get(Calendar.HOUR) + ""
 //                        + calendar.get(Calendar.MINUTE) + ""
 //                        + calendar.get(Calendar.SECOND) + ".jpg";
-                String imageName="imageName.jpg";
+                String imageName = "imageName.jpg";
                 File file = new File(getExternalCacheDir(), imageName);
                 try {
                     if (file.exists()) {
@@ -180,10 +204,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
     private void getOrcData(InputStream inputStream) {
-        if (inputStream==null) {
+        if (inputStream == null) {
             return;
-        }else {
+        } else {
             show_text.setText("");
         }
         try {
@@ -193,12 +218,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             inputStream.close();
             BASE64Encoder encoder = new BASE64Encoder();
             String encode = encoder.encode(data);
+            progressDialog.show();
             getPerSonData(encode);
             Log.e("encode", "1----------------------------" + encode);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     private void getPerSonData(final String encode) {
         new Thread(new Runnable() {
             @Override
@@ -228,12 +255,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .method("POST", requestBody)
                             .build();
                     Response response = client.newCall(request).execute();
+                    closeDialog();
                     if (response != null) {
                         String string = response.body().string();
                         Log.e("aa", "aaaaaaaaaaaa");
                         Log.e("aa", "aaaaaaaaaaaa" + string);
                         showText(string);
+                    }else {
+
                     }
+
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -244,6 +275,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }).start();
     }
+
+    private void closeDialog() {
+        if (progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
     private void showText(final String string) {
         runOnUiThread(new Runnable() {
             @Override
@@ -252,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+
     @SuppressLint("NewApi")
     private void handleImageOnKitKat(Intent data) {
         String imagePath = null;
@@ -274,11 +313,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         displayImage(imagePath);
     }
+
     private void handleImageBeforeKitKat(Intent data) {
         Uri uri = data.getData();
         String imagePath = getImagePath(uri, null);
         displayImage(imagePath);
     }
+
     private String getImagePath(Uri uri, String selection) {
         String path = null;
         Cursor cursor = getContentResolver().query(uri, null, selection, null, null);
@@ -290,6 +331,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return path;
     }
+
     private void displayImage(String imagePath) {
         if (imagePath != null) {
             Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
@@ -305,6 +347,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "failed to get image", Toast.LENGTH_SHORT).show();
         }
     }
-
 
 }
