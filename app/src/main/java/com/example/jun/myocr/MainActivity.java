@@ -176,8 +176,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case TAKE_PHOTO:
                 if (resultCode == RESULT_OK) {
                     try {
-                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                         mIvShowPic.setImageBitmap(bitmap);
+                        //对照相添加扫描功能   之前由于模拟器没法测试
+                        getOrcData(inputStream);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
